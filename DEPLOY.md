@@ -34,19 +34,24 @@ the exact tier and cost.
    You're about to replace the starter project's contents with this bundle,
    not the WSGI file itself.
 
-## 2. Upload this bundle
+## 2. Get this bundle onto the server
 
-1. **Files** tab → navigate to the project directory PythonAnywhere created
-   in step 1 (or a new directory you choose — just stay consistent with the
-   path you use in step 4's WSGI edit).
-2. Upload `taigidict-pythonanywhere.zip` there.
-3. Open a **Bash console** (Consoles tab → Bash) and unzip it:
-   ```bash
-   cd ~/taigidict   # or wherever you uploaded it
-   unzip -o taigidict-pythonanywhere.zip
-   ```
-   Adjust the `cd` target if you uploaded directly into the Flask app's own
-   folder rather than a zip that needs extracting into it.
+This now lives at **github.com/jtneng12/taigidict2** (public), so a plain
+clone works — PythonAnywhere's Bash console doesn't have your local SSH key,
+so use the HTTPS URL, not `git@github.com:...`:
+
+```bash
+git clone https://github.com/jtneng12/taigidict2.git taigidict
+```
+
+That creates `~/taigidict` (or wherever your home directory lands you) with
+everything from the repo. Future updates are a `git pull` in that same
+directory, followed by the **Web** tab's **Reload** button — no more
+re-zipping and re-uploading.
+
+(If you ever need the original zip-upload path instead — no git required —
+it's: **Files** tab → upload `taigidict-pythonanywhere.zip` → Bash console →
+`unzip -o taigidict-pythonanywhere.zip`.)
 
 ## 3. Virtualenv and dependencies
 
