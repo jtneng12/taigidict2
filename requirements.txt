@@ -1,0 +1,13 @@
+# Trimmed to exactly what gemini_app.py's import chain needs - verified by
+# grepping every module it imports (gemini_taigi, claude_taigi, moe_dict,
+# text_compare, ithuan_tts, azure_taigi_tts, aten_taigi_tts, search_counter)
+# for module-level imports. The source project's broader requirements.txt
+# also lists openpyxl, wordfreq, jieba, zhconv and claude-agent-sdk, but
+# those belong to other scripts in that project (mkdict_audio.py,
+# taiwanese_dict.py, pinyin_ime.py) and this app never imports them -
+# claude_agent_sdk in particular is only imported lazily, inside a function,
+# and only reached if ANTHROPIC_API_KEY is set (it isn't here), so leaving
+# it out does not change behavior, only install time.
+flask>=3.0.0
+requests>=2.28.0
+pypinyin>=0.50.0

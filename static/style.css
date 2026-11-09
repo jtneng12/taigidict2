@@ -1,0 +1,908 @@
+:root {
+  --accent: #F2653C;
+  --yellow: #EBEC84;
+  --ink: #ffffff;
+  --card-bg: rgba(255, 255, 255, 0.95);
+  --card-border: rgba(0, 0, 0, 0.08);
+  --text: #1a1a1a;
+  --text-dim: #6b6b6b;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  height: 100%;
+}
+
+body {
+  font-family: "Poppins", "Inter", "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", -apple-system, sans-serif;
+  margin: 0;
+  color: var(--text);
+  line-height: 1.5;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ---- Full-bleed rotating background, bright treatment ---- */
+#bg-rotator {
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  background: var(--yellow);
+}
+
+.bg-slide {
+  position: absolute;
+  inset: 0;
+  background-image: var(--bg-url);
+  background-size: cover;
+  background-position: center;
+  opacity: 0;
+  transform: scale(1.03);
+  transition: opacity 2.2s ease, transform 12s ease-out;
+}
+
+.bg-slide.active {
+  opacity: 1;
+  transform: scale(1.0);
+}
+
+/* Light, warm scrim - keeps photos bright and vivid, just enough for text legibility */
+.bg-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background:
+    linear-gradient(180deg, rgba(30,20,0,0.32) 0%, rgba(30,20,0,0.02) 22%, rgba(30,20,0,0.04) 60%, rgba(30,20,0,0.4) 100%);
+  pointer-events: none;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ---- Language picker, top right, bright pill ---- */
+.lang-picker {
+  position: fixed;
+  top: 1.25rem;
+  right: 1.25rem;
+  z-index: 20;
+}
+
+.lang-picker select {
+  padding: 0.4rem 0.7rem;
+  font-size: 0.85rem;
+  font-weight: 700;
+  border: none;
+  border-radius: 999px;
+  font-family: inherit;
+  background: #fff;
+  color: var(--text);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.18);
+  cursor: pointer;
+}
+
+/* ---- Page layout ---- */
+.page {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 0 1.5rem 3rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.25rem;
+}
+
+/* ---- Hero: TAIWAN logo centered on the full screen, search bar under it ---- */
+.hero {
+  width: 100%;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2rem;
+}
+
+.wordmark {
+  text-align: center;
+}
+
+.logo-badge {
+  display: inline-block;
+}
+
+.logo-badge img {
+  display: block;
+  height: clamp(4rem, 11vw, 7rem);
+  width: auto;
+  filter: drop-shadow(0 6px 18px rgba(0, 0, 0, 0.45));
+}
+
+.hero .search-card {
+  width: min(100%, 560px);
+}
+
+/* ---- Sample phrases: scrollable row of quick example searches, tucked
+   directly under the search bar. Narrow enough to show ~2 phrases up
+   front - scroll right to reveal the rest. ---- */
+.sample-phrases-wrap {
+  width: min(100%, 280px);
+  text-align: left;
+  margin-top: -1.25rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.sample-phrases-label {
+  flex: 0 0 auto;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+  color: var(--ink);
+  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.5);
+}
+
+.sample-phrases {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  gap: 0.5rem;
+  overflow-x: auto;
+  justify-content: flex-start;
+  padding: 0.15rem 0.15rem 0.6rem;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  /* Fade only the trailing edge, hinting more phrases beyond the initial two */
+  mask-image: linear-gradient(90deg, #000 0, #000 calc(100% - 16px), transparent 100%);
+  -webkit-mask-image: linear-gradient(90deg, #000 0, #000 calc(100% - 16px), transparent 100%);
+}
+
+.sample-phrase-btn {
+  flex: 0 0 auto;
+  padding: 0.45rem 0.95rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  font-family: inherit;
+  white-space: nowrap;
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  border-radius: 999px;
+  color: var(--text);
+  cursor: pointer;
+  transition: background 0.15s, transform 0.1s;
+}
+
+.sample-phrase-btn:hover {
+  background: #fff;
+}
+
+.sample-phrase-btn:active {
+  transform: scale(0.96);
+}
+
+/* ---- Bright cards (taiwan-wow.com content-card style) ---- */
+.glass-card {
+  width: 100%;
+  background: var(--card-bg);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  border: 1px solid var(--card-border);
+  border-radius: 22px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.22);
+  padding: 1.25rem;
+  color: var(--text);
+}
+
+.search-card {
+  padding: 1rem;
+}
+
+.search-row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.search-row input[type="text"] {
+  flex: 1;
+  min-width: 0;
+  height: 3.2rem;
+  padding: 0 1rem;
+  font-size: 1.1rem;
+  font-family: inherit;
+  color: var(--text);
+  background: #f4f4f0;
+  border: 1px solid var(--card-border);
+  border-radius: 16px;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.search-row input[type="text"]::placeholder {
+  color: #9a9a90;
+}
+
+.search-row input[type="text"]:focus {
+  outline: none;
+  border-color: var(--accent);
+  background: #fff;
+}
+
+.search-row button#search-btn {
+  padding: 0.85rem 1.6rem;
+  font-size: 1.05rem;
+  font-weight: 700;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: 16px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: filter 0.15s, transform 0.1s;
+}
+
+.search-row button#search-btn:hover:not(:disabled) {
+  filter: brightness(1.08);
+}
+
+.search-row button#search-btn:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+.search-row button#search-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btn-spinner {
+  display: inline-block;
+  width: 0.9em;
+  height: 0.9em;
+  margin-right: 0.5em;
+  vertical-align: -0.15em;
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: btn-spin 0.7s linear infinite;
+}
+
+@keyframes btn-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ---- Results ---- */
+.results-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+}
+
+.results-card h2 {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--accent);
+}
+
+.download-btns {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.download-btns .btn {
+  display: inline-block;
+  padding: 0.4rem 0.85rem;
+  font-size: 0.82rem;
+  font-weight: 700;
+  background: #f4f4f0;
+  border: 1px solid var(--card-border);
+  color: var(--text);
+  border-radius: 999px;
+  text-decoration: none;
+  transition: background 0.15s;
+}
+
+.download-btns .btn:hover {
+  background: #eaeae4;
+}
+
+.table-wrapper {
+  overflow-x: auto;
+  border-radius: 14px;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th, td {
+  padding: 0.6rem 0.75rem;
+  text-align: left;
+  border-bottom: 1px solid var(--card-border);
+  white-space: nowrap;
+}
+
+th {
+  background: #f7f7f2;
+  font-weight: 700;
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-dim);
+}
+
+td {
+  font-size: 0.92rem;
+  color: var(--text);
+  white-space: normal;
+}
+
+.audio-link {
+  font-size: 1.15rem;
+  text-decoration: none;
+}
+
+.audio-link:hover {
+  opacity: 0.8;
+}
+
+.audio-play-btn {
+  font-size: 1.15rem;
+  line-height: 1;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.audio-play-btn:hover {
+  opacity: 0.8;
+}
+
+.error-state {
+  text-align: center;
+  color: var(--accent);
+  border-color: rgba(242, 101, 60, 0.3);
+}
+
+/* ---- Footer: minimal, single line, on-photo ---- */
+.minimal-footer {
+  margin: auto auto 0;
+  padding: 0.5rem 1rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--ink);
+  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.5);
+  text-align: center;
+  max-width: 720px;
+}
+
+.minimal-footer .disclaimer {
+  font-size: 0.7rem;
+  font-weight: 400;
+  opacity: 0.85;
+}
+
+.minimal-footer p {
+  margin: 0.3rem 0 0;
+}
+
+.minimal-footer p:first-child {
+  margin-top: 0;
+}
+
+.minimal-footer a {
+  color: var(--ink);
+  text-decoration: none;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.5);
+}
+
+.minimal-footer a:hover {
+  border-color: var(--yellow);
+}
+
+.minimal-footer .photo-credits {
+  font-size: 0.68rem;
+  font-weight: 400;
+  opacity: 0.85;
+}
+
+/* ---- Mandarin | Taiwanese | English lookup cards (Claude + 意傳科技 edition) ---- */
+.lookup-results {
+  max-width: 1080px;
+}
+
+.lookup-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.lookup-card {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0;
+  background: #fff;
+  border: 1px solid var(--card-border);
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  overflow: hidden;
+}
+
+.lookup-col {
+  padding: 1.5rem 1.75rem;
+  border-left: 1px solid var(--card-border);
+  min-width: 0;
+}
+
+.lookup-col:first-child {
+  border-left: none;
+}
+
+.lookup-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  margin-bottom: 0.85rem;
+}
+
+.lookup-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.1rem;
+  height: 1.1rem;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #fff;
+  font-size: 0.62rem;
+  font-weight: 700;
+  vertical-align: middle;
+}
+
+.lookup-head {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+}
+
+.lookup-audio-btn {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  color: var(--text-dim);
+  transition: color 0.15s;
+}
+
+.lookup-audio-btn:hover:not(:disabled) {
+  color: var(--accent);
+}
+
+.lookup-audio-btn svg {
+  width: 1.3rem;
+  height: 1.3rem;
+  display: block;
+}
+
+.lookup-audio-btn:disabled {
+  cursor: default;
+  font-size: 0.72rem;
+  font-weight: 400;
+  white-space: nowrap;
+}
+
+.lookup-main {
+  flex: 1;
+  min-width: 0;
+  font-size: 1.55rem;
+  font-weight: 600;
+  color: var(--text);
+  line-height: 1.35;
+  overflow-wrap: break-word;
+}
+
+.lookup-main.is-latin {
+  font-size: 1.2rem;
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+.lookup-secondary {
+  margin-top: 0.75rem;
+  font-family: "SF Mono", "Menlo", "Consolas", monospace;
+  font-size: 0.82rem;
+  color: var(--text-dim);
+  overflow-wrap: break-word;
+}
+
+.lookup-secondary.is-taigi {
+  color: #a8632c;
+}
+
+/* ---- Voice engine toggle (bottom of page) ---- */
+.voice-toggle-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 1.1rem 1.25rem;
+}
+
+.voice-toggle-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+
+.voice-toggle {
+  display: inline-flex;
+  background: #f4f4f0;
+  border-radius: 999px;
+  padding: 0.25rem;
+  gap: 0.25rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.voice-toggle-btn {
+  padding: 0.5rem 1.1rem;
+  font-size: 0.85rem;
+  font-weight: 700;
+  font-family: inherit;
+  border: none;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--text-dim);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.voice-toggle-btn:hover:not(.is-active) {
+  background: #eaeae4;
+}
+
+.voice-toggle-btn.is-active {
+  background: var(--accent);
+  color: #fff;
+}
+
+.search-counter {
+  margin: 0.15rem 0 0;
+  font-size: 0.82rem;
+  color: var(--text-dim);
+  text-align: center;
+}
+
+/* Taigi words/characters shared with the Mandarin source are dimmed;
+   words specific to Taigi (not present in the Mandarin sentence) are bold. */
+.diff-shared {
+  color: var(--text-dim);
+  font-weight: 400;
+}
+
+.diff-specific {
+  color: var(--text);
+  font-weight: 700;
+}
+
+@media (max-width: 820px) {
+  .lookup-card {
+    grid-template-columns: 1fr;
+  }
+  .lookup-col {
+    border-left: none;
+    border-top: 1px solid var(--card-border);
+  }
+  .lookup-col:first-child {
+    border-top: none;
+  }
+}
+
+@media (max-width: 560px) {
+  .page {
+    padding-top: 5vh;
+  }
+  .search-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .search-row button#search-btn {
+    width: 100%;
+  }
+}
+
+/* ---- BYOK edition: top bar (key status + language) and key modal ---- */
+.top-bar {
+  position: fixed;
+  top: 1.25rem;
+  right: 1.25rem;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.top-bar select {
+  padding: 0.4rem 0.7rem;
+  font-size: 0.85rem;
+  font-weight: 700;
+  border: none;
+  border-radius: 999px;
+  font-family: inherit;
+  background: #fff;
+  color: var(--text);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.18);
+  cursor: pointer;
+}
+
+.key-status-btn {
+  width: 2.4rem;
+  height: 2.4rem;
+  border-radius: 50%;
+  border: none;
+  background: #fff;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.18);
+  cursor: pointer;
+  font-size: 1.1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.6;
+  transition: opacity 0.15s;
+}
+
+.key-status-btn.has-key {
+  opacity: 1;
+}
+
+.key-status-btn:hover {
+  opacity: 1;
+}
+
+.key-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: rgba(0, 0, 0, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.25rem;
+}
+
+.key-modal {
+  position: relative;
+  width: min(100%, 440px);
+  background: #fff;
+  border-radius: 20px;
+  padding: 1.75rem;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.35);
+}
+
+.key-modal h3 {
+  margin: 0 0 0.6rem;
+  font-size: 1.15rem;
+  color: var(--text);
+}
+
+.key-modal p {
+  margin: 0 0 1rem;
+  font-size: 0.85rem;
+  line-height: 1.5;
+  color: var(--text-dim);
+}
+
+.key-modal input {
+  width: 100%;
+  height: 2.8rem;
+  padding: 0 1rem;
+  font-size: 0.95rem;
+  font-family: "SF Mono", "Menlo", "Consolas", monospace;
+  border: 1px solid var(--card-border);
+  border-radius: 12px;
+  background: #f4f4f0;
+  color: var(--text);
+  margin-bottom: 1rem;
+}
+
+.key-modal input:focus {
+  outline: none;
+  border-color: var(--accent);
+  background: #fff;
+}
+
+.key-modal-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.key-modal-actions a {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--accent);
+  text-decoration: none;
+}
+
+.key-modal-actions a:hover {
+  text-decoration: underline;
+}
+
+.key-modal-actions button {
+  padding: 0.65rem 1.4rem;
+  font-size: 0.9rem;
+  font-weight: 700;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.key-modal-actions button:hover {
+  filter: brightness(1.08);
+}
+
+.key-modal-close {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.9rem;
+  background: none;
+  border: none;
+  font-size: 1.4rem;
+  line-height: 1;
+  color: var(--text-dim);
+  cursor: pointer;
+  padding: 0.25rem;
+}
+
+.key-modal-close:hover {
+  color: var(--text);
+}
+
+/* ---- Hover-to-translate tooltip: hover a word/phrase in the Mandarin or
+   Taiwanese columns to see a mini Mandarin/Taiwanese/English breakdown ---- */
+.word-segment {
+  cursor: help;
+  border-radius: 4px;
+  padding: 0 1px;
+  margin: 0 -1px;
+  transition: background 0.12s;
+}
+
+.word-segment:hover {
+  background: rgba(242, 101, 60, 0.16);
+}
+
+.hover-tooltip {
+  position: fixed;
+  z-index: 200;
+  background: #fff;
+  border: 1px solid var(--card-border);
+  border-radius: 12px;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.2);
+  padding: 0.65rem 0.9rem;
+  max-width: 240px;
+  pointer-events: none;
+}
+
+.hover-tooltip-label {
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  margin-top: 0.5rem;
+}
+
+.hover-tooltip-label:first-child {
+  margin-top: 0;
+}
+
+.hover-tooltip-text {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text);
+  line-height: 1.3;
+  overflow-wrap: break-word;
+}
+
+.hover-tooltip-romanization {
+  margin-top: 0.15rem;
+  font-family: "SF Mono", "Menlo", "Consolas", monospace;
+  font-size: 0.72rem;
+  color: var(--text-dim);
+  overflow-wrap: break-word;
+}
+
+.hover-tooltip-romanization.is-taigi {
+  color: #a8632c;
+}
+
+/* ---- SEO/landing content: static, crawlable copy about Taigi and the
+   tool itself - always rendered server-side regardless of search state,
+   so a crawler (or a visitor with JS disabled) sees real descriptive text
+   instead of just an empty search box. ---- */
+.seo-content h2 {
+  margin: 0 0 0.75rem;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.seo-content p {
+  margin: 0 0 0.85rem;
+  font-size: 0.92rem;
+  line-height: 1.7;
+  color: var(--text-dim);
+}
+
+.seo-content p:last-child {
+  margin-bottom: 0;
+}
+
+.seo-faq-heading {
+  margin: 1.5rem 0 0.9rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+
+.seo-faq {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.seo-faq-item {
+  padding-top: 0.9rem;
+  border-top: 1px solid var(--card-border);
+}
+
+.seo-faq-item:first-child {
+  padding-top: 0;
+  border-top: none;
+}
+
+.seo-faq-q {
+  margin: 0 0 0.3rem;
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.seo-faq-a {
+  margin: 0;
+  font-size: 0.88rem;
+  line-height: 1.6;
+  color: var(--text-dim);
+}

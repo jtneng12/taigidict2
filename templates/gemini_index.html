@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>台語字典 Taigi Dictionary — 華語轉台語發音翻譯 | Mandarin to Taiwanese Hokkien</title>
+  <meta name="description" content="免費台語字典，將華語或英文翻譯成台語（台灣閩南語），附台羅拼音與語音朗讀。Free Taiwanese Hokkien (Taigi) dictionary — translate Mandarin or English into Taigi with Tâi-lô romanization and natural audio pronunciation.">
+  <meta property="og:title" content="台語字典 Taigi Dictionary — Mandarin to Taiwanese Hokkien">
+  <meta property="og:description" content="免費台語字典，將華語或英文翻譯成台語，附台羅拼音與語音朗讀。Free Taiwanese Hokkien (Taigi) dictionary with Tâi-lô romanization and audio pronunciation.">
+  <meta property="og:type" content="website">
+  <meta name="twitter:card" content="summary">
+  <link rel="preconnect" href="https://upload.wikimedia.org">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "台語和台灣閩南語一樣嗎？",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "一樣。台語（Tâi-gí）是台灣閩南語最常見的稱呼，兩者指的是同一種語言，在本站中可以互換使用。"
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "台羅拼音是什麼？",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "台羅（台灣羅馬字拼音方案）是教育部公告的官方台語拼音系統，用羅馬字標示台語的發音與聲調，本站的每一句台語翻譯都會附上台羅拼音，方便初學者對照發音。"
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "這個台語翻譯字典要收費嗎？",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "不用，本站完全免費使用，翻譯由 Gemini AI 提供，發音由意傳科技或 ATEN 優聲學等台語語音合成引擎提供。"
+        }
+      }
+    ]
+  }
+  </script>
+</head>
+<body>
+
+  <div id="bg-rotator" aria-hidden="true">
+    <div class="bg-slide"></div>
+    <div class="bg-slide"></div>
+    <div class="bg-slide"></div>
+    <div class="bg-slide"></div>
+  </div>
+  <div class="bg-scrim"></div>
+
+  <div class="lang-picker">
+    <label for="lang-select" class="sr-only">Interface language</label>
+    <select id="lang-select">
+      <option value="zh-Hant">繁</option>
+      <option value="zh-Hans">简</option>
+      <option value="en">EN</option>
+    </select>
+  </div>
+
+  <main class="page">
+
+    <section class="hero">
+      <div class="wordmark">
+        <div class="logo-badge">
+          <img src="{{ url_for('static', filename='img/taiwan-wow-logo.png') }}" alt="TAIWAN - Waves of Wonder">
+        </div>
+      </div>
+
+      <section class="glass-card search-card">
+        <div class="search-row">
+          <label for="sentence" class="sr-only" data-i18n="searchLabel">字音查詢：</label>
+          <input
+            type="text"
+            id="sentence"
+            data-i18n-placeholder="placeholder"
+            placeholder="請輸入華文或英文句子"
+            autocomplete="off"
+            autofocus
+          >
+          <button type="button" id="search-btn">尋</button>
+        </div>
+      </section>
+
+      <div class="sample-phrases-wrap">
+        <div class="sample-phrases-label" data-i18n="samplePhrasesLabel">試看看：</div>
+        <div class="sample-phrases" id="sample-phrases" role="list" aria-label="Sample phrases"></div>
+      </div>
+    </section>
+
+    <section class="glass-card results-card lookup-results" id="results-section" style="display: none;">
+      <div class="results-head">
+        <h2 data-i18n="resultsHeading">台語翻譯</h2>
+      </div>
+      <div id="lookup-list" class="lookup-list"></div>
+    </section>
+
+    <section class="glass-card error-state" id="error-state" style="display: none;">
+      <p id="error-message"></p>
+    </section>
+
+    <section class="glass-card voice-toggle-card">
+      <div class="voice-toggle-label" data-i18n="voiceToggleLabel">台語發音引擎</div>
+      <div class="voice-toggle" id="voice-toggle">
+        <button type="button" class="voice-toggle-btn" data-engine="ithuan" data-i18n="voiceIthuan">意傳科技（原音）</button>
+        <button type="button" class="voice-toggle-btn" data-engine="aten" data-i18n="voiceAten">ATEN 優聲學</button>
+        <!-- Azure Minnan temporarily disabled - uncomment to re-enable:
+        <button type="button" class="voice-toggle-btn" data-engine="azure" data-i18n="voiceAzure">Azure 閩南語</button>
+        -->
+      </div>
+      <p class="search-counter" id="search-counter" hidden></p>
+    </section>
+
+    <section class="glass-card seo-content">
+      <h2 data-i18n="seoHeading">什麼是台語字典？</h2>
+      <p data-i18n="seoBody1">台語（臺灣台語，又稱臺灣閩南語）是台灣使用人口最多的本土語言之一。這個台語字典結合 AI 翻譯與語音合成技術，只要輸入一句華語或英文，就能立即看到自然道地的台語翻譯，並附上台羅拼音與真人般的語音朗讀，幫助你學習台語發音。</p>
+      <p data-i18n="seoBody2">不同於傳統逐字對照的辭典，本站的台語翻譯會依語境給出一到兩種自然講法，並以顏色標示台語特有的詞彙，方便比較台語與華語的差異。</p>
+      <h3 class="seo-faq-heading" data-i18n="faqHeading">常見問題</h3>
+      <div class="seo-faq">
+        <div class="seo-faq-item">
+          <p class="seo-faq-q" data-i18n="faqQ1">台語和台灣閩南語一樣嗎？</p>
+          <p class="seo-faq-a" data-i18n="faqA1">一樣。台語（Tâi-gí）是台灣閩南語最常見的稱呼，兩者指的是同一種語言，在本站中可以互換使用。</p>
+        </div>
+        <div class="seo-faq-item">
+          <p class="seo-faq-q" data-i18n="faqQ2">台羅拼音是什麼？</p>
+          <p class="seo-faq-a" data-i18n="faqA2">台羅（台灣羅馬字拼音方案）是教育部公告的官方台語拼音系統，用羅馬字標示台語的發音與聲調，本站的每一句台語翻譯都會附上台羅拼音，方便初學者對照發音。</p>
+        </div>
+        <div class="seo-faq-item">
+          <p class="seo-faq-q" data-i18n="faqQ3">這個台語翻譯字典要收費嗎？</p>
+          <p class="seo-faq-a" data-i18n="faqA3">不用，本站完全免費使用，翻譯由 Gemini AI 提供，發音由意傳科技或 ATEN 優聲學等台語語音合成引擎提供。</p>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <div id="hover-tooltip" class="hover-tooltip" hidden></div>
+
+  <footer class="minimal-footer">
+    <p><span data-i18n="footerPre">台語翻譯由 Gemini 提供 · 語音合成由 </span><a href="https://ithuan.tw/" target="_blank" rel="noopener">意傳科技</a><span data-i18n="footerMid"> 或 </span><a href="https://azure.microsoft.com/products/ai-services/ai-speech" target="_blank" rel="noopener">Microsoft Azure</a><span data-i18n="footerPost"> 提供</span></p>
+    <p class="disclaimer" data-i18n="disclaimer">非逐字對照的傳統辭典，而是結合 AI 翻譯與語音合成、提供約八成準確度的近似發音，僅供參考。</p>
+    <p class="photo-credits">
+      Photos: <a href="https://commons.wikimedia.org/wiki/File:Sea_of_clouds,_Taiwan.jpg" target="_blank" rel="noopener">Bernard Gagnon</a> ·
+      <a href="https://commons.wikimedia.org/wiki/File:Taipei_Taiwan_Taipei-101-Tower-01.jpg" target="_blank" rel="noopener">CEphoto, Uwe Aranas</a> ·
+      <a href="https://commons.wikimedia.org/wiki/File:Longshan_Temple,_Taipei_01.jpg" target="_blank" rel="noopener">Bernard Gagnon</a> ·
+      <a href="https://commons.wikimedia.org/wiki/File:Sun_Moon_Lake_in_the_afternoon_on_20_December_2019.jpg" target="_blank" rel="noopener">Mitchell Hirsch</a>,
+      via Wikimedia Commons (<a href="https://creativecommons.org/licenses/by-sa/3.0/" target="_blank" rel="noopener">CC BY-SA 3.0</a> / <a href="https://creativecommons.org/licenses/by/2.0/" target="_blank" rel="noopener">CC BY 2.0</a>)
+    </p>
+  </footer>
+
+  <script>
+    // ---- Full-bleed rotating background (Waves of Wonder style), crossfades every 30s ----
+    const BG_IMAGES = [
+      "https://commons.wikimedia.org/wiki/Special:FilePath/Taipei%20Taiwan%20Taipei-101-Tower-01.jpg?width=3840",
+      "https://commons.wikimedia.org/wiki/Special:FilePath/Sea%20of%20clouds%2C%20Taiwan.jpg?width=3840",
+      "https://commons.wikimedia.org/wiki/Special:FilePath/Longshan%20Temple%2C%20Taipei%2001.jpg?width=3840",
+      "https://commons.wikimedia.org/wiki/Special:FilePath/Sun%20Moon%20Lake%20in%20the%20afternoon%20on%2020%20December%202019.jpg?width=3840",
+    ];
+    const BG_INTERVAL_MS = 30000;
+    const slides = document.querySelectorAll('#bg-rotator .bg-slide');
+    let bgIndex = 0;
+    slides.forEach((el, i) => {
+      el.style.setProperty('--bg-url', `url("${BG_IMAGES[i % BG_IMAGES.length]}")`);
+      if (i === 0) el.classList.add('active');
+    });
+    setInterval(() => {
+      const next = (bgIndex + 1) % slides.length;
+      slides[bgIndex].classList.remove('active');
+      slides[next].classList.add('active');
+      bgIndex = next;
+    }, BG_INTERVAL_MS);
+
+    // ---- i18n: dropdown translates the UI (search box, labels, etc.) ----
+    const I18N = {
+      'zh-Hant': {
+        searchLabel: '字音查詢：',
+        placeholder: '請輸入華文或英文句子',
+        searchBtn: '尋',
+        searchBtnLoading: '查詢中',
+        resultsHeading: '台語翻譯',
+        colMandarin: '華語', colTaiwanese: '台語', colEnglish: '英語',
+        audioTitlePlay: '播放發音',
+        emptyLine1: '請在上方輸入框中輸入華文或英文句子，然後點擊「尋」進行查詢。',
+        emptyLine2: '例如：我的名字是、你好、謝謝',
+        errorRequired: '請輸入華文或英文句子',
+        errorGeneric: '查詢失敗，請稍後再試',
+        footerPre: '台語翻譯由 Gemini 提供 · 語音合成由 ',
+        footerMid: ' 或 ',
+        footerPost: ' 提供',
+        disclaimer: '非逐字對照的傳統辭典，而是結合 AI 翻譯與語音合成、提供約八成準確度的近似發音，僅供參考。',
+        audioPending: '合成中…',
+        audioFailed: '語音合成失敗',
+        voiceToggleLabel: '台語發音引擎',
+        voiceIthuan: '意傳科技（原音）',
+        voiceAten: 'ATEN 優聲學',
+        voiceAzure: 'Azure 閩南語',
+        searchesMade: '已進行 {n} 次查詢',
+        samplePhrasesLabel: '試看看：',
+        seoHeading: '什麼是台語字典？',
+        seoBody1: '台語（臺灣台語，又稱臺灣閩南語）是台灣使用人口最多的本土語言之一。這個台語字典結合 AI 翻譯與語音合成技術，只要輸入一句華語或英文，就能立即看到自然道地的台語翻譯，並附上台羅拼音與真人般的語音朗讀，幫助你學習台語發音。',
+        seoBody2: '不同於傳統逐字對照的辭典，本站的台語翻譯會依語境給出一到兩種自然講法，並以顏色標示台語特有的詞彙，方便比較台語與華語的差異。',
+        faqHeading: '常見問題',
+        faqQ1: '台語和台灣閩南語一樣嗎？',
+        faqA1: '一樣。台語（Tâi-gí）是台灣閩南語最常見的稱呼，兩者指的是同一種語言，在本站中可以互換使用。',
+        faqQ2: '台羅拼音是什麼？',
+        faqA2: '台羅（台灣羅馬字拼音方案）是教育部公告的官方台語拼音系統，用羅馬字標示台語的發音與聲調，本站的每一句台語翻譯都會附上台羅拼音，方便初學者對照發音。',
+        faqQ3: '這個台語翻譯字典要收費嗎？',
+        faqA3: '不用，本站完全免費使用，翻譯由 Gemini AI 提供，發音由意傳科技或 ATEN 優聲學等台語語音合成引擎提供。',
+      },
+      'zh-Hans': {
+        searchLabel: '字音查询：',
+        placeholder: '请输入华文或英文句子',
+        searchBtn: '寻',
+        searchBtnLoading: '查询中',
+        resultsHeading: '台语翻译',
+        colMandarin: '华语', colTaiwanese: '台语', colEnglish: '英语',
+        audioTitlePlay: '播放发音',
+        emptyLine1: '请在上方输入框中输入华文或英文句子，然后点击"寻"进行查询。',
+        emptyLine2: '例如：我的名字是、你好、谢谢',
+        errorRequired: '请输入华文或英文句子',
+        errorGeneric: '查询失败，请稍后再试',
+        footerPre: '台语翻译由 Gemini 提供 · 语音合成由 ',
+        footerMid: ' 或 ',
+        footerPost: ' 提供',
+        disclaimer: '非逐字对照的传统辞典，而是结合 AI 翻译与语音合成、提供约八成准确度的近似发音，仅供参考。',
+        audioPending: '合成中…',
+        audioFailed: '语音合成失败',
+        voiceToggleLabel: '台语发音引擎',
+        voiceIthuan: '意传科技（原音）',
+        voiceAten: 'ATEN 优声学',
+        voiceAzure: 'Azure 闽南语',
+        searchesMade: '已进行 {n} 次查询',
+        samplePhrasesLabel: '试试看：',
+        seoHeading: '什么是台语字典？',
+        seoBody1: '台语（台湾台语，又称台湾闽南语）是台湾使用人口最多的本土语言之一。这个台语字典结合 AI 翻译与语音合成技术，只要输入一句华语或英文，就能立即看到自然道地的台语翻译，并附上台罗拼音与真人般的语音朗读，帮助你学习台语发音。',
+        seoBody2: '不同于传统逐字对照的辞典，本站的台语翻译会依语境给出一到两种自然讲法，并以颜色标示台语特有的词汇，方便比较台语与华语的差异。',
+        faqHeading: '常见问题',
+        faqQ1: '台语和台湾闽南语一样吗？',
+        faqA1: '一样。台语（Tâi-gí）是台湾闽南语最常见的称呼，两者指的是同一种语言，在本站中可以互换使用。',
+        faqQ2: '台罗拼音是什么？',
+        faqA2: '台罗（台湾罗马字拼音方案）是教育部公告的官方台语拼音系统，用罗马字标示台语的发音与声调，本站的每一句台语翻译都会附上台罗拼音，方便初学者对照发音。',
+        faqQ3: '这个台语翻译字典要收费吗？',
+        faqA3: '不用，本站完全免费使用，翻译由 Gemini AI 提供，发音由意传科技或 ATEN 优声学等台语语音合成引擎提供。',
+      },
+      'en': {
+        searchLabel: 'Search:',
+        placeholder: 'Enter a Mandarin or English sentence',
+        searchBtn: 'Search',
+        searchBtnLoading: 'Searching',
+        resultsHeading: 'Taigi Translations',
+        colMandarin: 'MANDARIN', colTaiwanese: 'TAIWANESE', colEnglish: 'ENGLISH',
+        audioTitlePlay: 'Play pronunciation',
+        emptyLine1: 'Enter a Mandarin or English sentence above and click "Search" to look it up.',
+        emptyLine2: 'Examples: 我的名字是、你好、謝謝',
+        errorRequired: 'Please enter a sentence',
+        errorGeneric: 'Search failed, please try again later',
+        footerPre: 'Taigi translation by Gemini · Speech synthesis by ',
+        footerMid: ' or ',
+        footerPost: '',
+        disclaimer: 'Not a traditional word-for-word dictionary — an ~80/20 blend of AI translation and speech synthesis producing approximate pronunciation, for reference only.',
+        audioPending: 'Synthesizing…',
+        audioFailed: 'Audio synthesis failed',
+        voiceToggleLabel: 'Taigi voice engine',
+        voiceIthuan: 'ithuan.tw (original)',
+        voiceAten: 'ATEN AI Voice',
+        voiceAzure: 'Azure Minnan',
+        searchesMade: '{n} searches made',
+        samplePhrasesLabel: 'Try:',
+        seoHeading: 'What is a Taigi dictionary?',
+        seoBody1: 'Taigi (台語), also known as Taiwanese Hokkien or Taiwanese Minnan, is the most widely spoken indigenous language in Taiwan. This Taigi dictionary combines AI translation with speech synthesis: type a sentence in Mandarin or English and instantly get a natural Taiwanese Hokkien translation, complete with Tâi-lô romanization and lifelike audio pronunciation to help you learn Taigi.',
+        seoBody2: 'Unlike a traditional word-for-word dictionary, this tool offers one or two natural, idiomatic phrasings depending on context, and highlights the words that are specifically Taigi so you can compare them directly against the Mandarin source.',
+        faqHeading: 'Frequently asked questions',
+        faqQ1: 'Is Taigi the same as Taiwanese Hokkien?',
+        faqA1: 'Yes. Taigi (Tâi-gí) is simply the everyday name for Taiwanese Hokkien — the two terms refer to the same language and are used interchangeably on this site.',
+        faqQ2: 'What is Tâi-lô romanization?',
+        faqA2: "Tâi-lô is Taiwan's official romanization system for Taigi, standardized by the Ministry of Education. It spells out Taigi pronunciation and tones using the Latin alphabet, and every translation on this site includes it so beginners can follow along.",
+        faqQ3: 'Is this Taiwanese Hokkien dictionary free to use?',
+        faqA3: "Yes, it's completely free. Translations are powered by Gemini AI, and audio pronunciation comes from Taiwanese speech synthesis engines like 意傳科技 (ithuan.tw) and ATEN AI Voice.",
+      },
+    };
+    let currentLang = localStorage.getItem('taigi-lang') || 'zh-Hant';
+
+    function t(key) {
+      const table = I18N[currentLang] || {};
+      if (key in table) return table[key];
+      if (key in I18N['zh-Hant']) return I18N['zh-Hant'][key];
+      return key;
+    }
+
+    function applyLanguage(lang) {
+      currentLang = I18N[lang] ? lang : 'zh-Hant';
+      localStorage.setItem('taigi-lang', currentLang);
+      document.documentElement.lang = currentLang;
+      document.querySelectorAll('[data-i18n]').forEach((el) => {
+        el.textContent = t(el.dataset.i18n);
+      });
+      document.querySelectorAll('[data-i18n-placeholder]').forEach((el) => {
+        el.placeholder = t(el.dataset.i18nPlaceholder);
+      });
+      updateSearchButton();
+      if (lastSearchCount !== null) renderSearchCount(lastSearchCount);
+    }
+
+    const sentenceInput = document.getElementById('sentence');
+    const searchBtn = document.getElementById('search-btn');
+    let isSearching = false;
+
+    function updateSearchButton() {
+      if (isSearching) {
+        searchBtn.innerHTML = '<span class="btn-spinner" aria-hidden="true"></span>' + t('searchBtnLoading');
+      } else {
+        searchBtn.textContent = t('searchBtn');
+      }
+    }
+    const resultsSection = document.getElementById('results-section');
+    const lookupList = document.getElementById('lookup-list');
+    const errorState = document.getElementById('error-state');
+    const errorMessage = document.getElementById('error-message');
+    const langSelect = document.getElementById('lang-select');
+    const voiceToggleButtons = document.querySelectorAll('.voice-toggle-btn');
+    const searchCounterEl = document.getElementById('search-counter');
+
+    // ---- Shared search counter: total searches across every app/port (5001-5004),
+    // persisted server-side (see search_counter.py) - not per-browser. ----
+    let lastSearchCount = null;
+
+    function renderSearchCount(count) {
+      lastSearchCount = count;
+      searchCounterEl.textContent = t('searchesMade').replace('{n}', count.toLocaleString('en-US'));
+      searchCounterEl.hidden = false;
+    }
+
+    fetch('/api/search-count')
+      .then((res) => res.json())
+      .then((data) => renderSearchCount(data.count))
+      .catch(() => {});
+
+    langSelect.value = currentLang;
+    langSelect.addEventListener('change', () => applyLanguage(langSelect.value));
+    applyLanguage(currentLang);
+
+    // ---- Sample phrases: scrollable row of quick example searches under the
+    // search bar, from Glossika's "20 Basic Phrases in Taiwanese Hokkien"
+    // (https://ai.glossika.com/blog/a-glimpse-of-taiwanese-hokkien). English
+    // text, since the search box accepts English directly and it avoids any
+    // ambiguity between Taigi hanji and Mandarin. The two fill-in-the-blank
+    // entries ("My name is ___", "I am from ___") are left out - not
+    // complete sentences to search as-is. ----
+    const SAMPLE_PHRASES = [
+      'Hi', 'How are you?', 'Thank you.', 'What day is it today?', "What's your name?",
+      'What time is it?', 'How old are you?', 'Excuse me', 'Be careful!', 'Please help me!',
+      'I am sick.', "The weather's nice today.", 'Where are you from?', "What's your job?",
+      "It's hot today.", 'Are you feeling okay?', "I'm tired.", 'Is it raining?', 'Goodbye',
+    ];
+    const samplePhrasesEl = document.getElementById('sample-phrases');
+    SAMPLE_PHRASES.forEach((phrase) => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'sample-phrase-btn';
+      btn.setAttribute('role', 'listitem');
+      btn.textContent = phrase;
+      btn.addEventListener('click', () => {
+        sentenceInput.value = phrase;
+        doSearch();
+      });
+      samplePhrasesEl.appendChild(btn);
+    });
+
+    // ---- Voice engine toggle: which backend synthesizes Taigi audio ----
+    let currentVoiceEngine = localStorage.getItem('taigi-voice-engine') || 'ithuan';
+    // Fall back if a previously-saved engine isn't currently offered (e.g.
+    // Azure temporarily disabled in the markup above).
+    const availableEngines = new Set([...voiceToggleButtons].map((b) => b.dataset.engine));
+    if (!availableEngines.has(currentVoiceEngine)) {
+      currentVoiceEngine = 'ithuan';
+      localStorage.setItem('taigi-voice-engine', currentVoiceEngine);
+    }
+    // {hanji, tailo, audioBtn} for each currently rendered Taiwanese column,
+    // so switching engines re-fetches audio without re-translating.
+    let currentVariations = [];
+
+    function applyVoiceEngineUI() {
+      voiceToggleButtons.forEach((b) => {
+        b.classList.toggle('is-active', b.dataset.engine === currentVoiceEngine);
+      });
+    }
+
+    function setVoiceEngine(engine) {
+      if (engine === currentVoiceEngine) return;
+      currentVoiceEngine = engine;
+      localStorage.setItem('taigi-voice-engine', engine);
+      applyVoiceEngineUI();
+      currentVariations.forEach(({ hanji, tailo, audioBtn }) => fetchAudio(hanji, tailo, audioBtn));
+    }
+
+    voiceToggleButtons.forEach((b) => {
+      b.addEventListener('click', () => setVoiceEngine(b.dataset.engine));
+    });
+    applyVoiceEngineUI();
+
+    async function doSearch() {
+      const sentence = sentenceInput.value.trim();
+      if (!sentence) {
+        showError(t('errorRequired'));
+        return;
+      }
+
+      hideError();
+      isSearching = true;
+      searchBtn.disabled = true;
+      updateSearchButton();
+
+      try {
+        const res = await fetch('/api/search', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ sentence })
+        });
+        const data = await res.json();
+
+        if (!res.ok) {
+          throw new Error(data.error || t('errorGeneric'));
+        }
+
+        renderResults(data);
+        resultsSection.style.display = 'block';
+        if (typeof data.search_count === 'number') renderSearchCount(data.search_count);
+      } catch (err) {
+        showError(err.message || t('errorGeneric'));
+      } finally {
+        isSearching = false;
+        searchBtn.disabled = false;
+        updateSearchButton();
+      }
+    }
+
+    // ---- Browser-native speech synthesis for Mandarin & English (no backend/API needed) ----
+    function speak(text, lang) {
+      if (!text || !('speechSynthesis' in window)) return;
+      window.speechSynthesis.cancel();
+      const utter = new SpeechSynthesisUtterance(text);
+      utter.lang = lang;
+      window.speechSynthesis.speak(utter);
+    }
+
+    // Simple monochrome speaker glyph (currentColor) instead of the emoji, to match
+    // the reference site's line-icon style.
+    const SPEAKER_ICON_SVG = '<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">' +
+      '<path d="M4 9v6h4l5 5V4L8 9H4z" fill="currentColor"/>' +
+      '<path d="M16.5 8.5a5 5 0 0 1 0 7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>' +
+      '<path d="M19 6a9 9 0 0 1 0 12" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" opacity="0.6"/>' +
+      '</svg>';
+
+    function makeAudioButton(onClick) {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'audio-play-btn lookup-audio-btn';
+      btn.title = t('audioTitlePlay');
+      btn.innerHTML = SPEAKER_ICON_SVG;
+      btn.addEventListener('click', onClick);
+      return btn;
+    }
+
+    // Taigi audio slot: a single button whose state (pending/ready/error) is
+    // updated in place as /api/audio resolves, or when the voice engine toggle
+    // triggers a re-fetch.
+    function makeAudioSlot() {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'audio-play-btn lookup-audio-btn';
+      setSlotState(btn, 'pending');
+      return btn;
+    }
+
+    function setSlotState(btn, state, payload) {
+      btn.onclick = null;
+      btn.title = '';
+      btn.innerHTML = '';
+      btn.disabled = state !== 'ready';
+      if (state === 'ready') {
+        btn.innerHTML = SPEAKER_ICON_SVG;
+        btn.title = t('audioTitlePlay');
+        btn.onclick = () => new Audio(payload).play().catch((err) => console.warn('Audio playback failed:', err));
+      } else if (state === 'error') {
+        btn.textContent = t('audioFailed');
+        btn.title = payload || '';
+      } else {
+        btn.textContent = t('audioPending');
+      }
+    }
+
+    async function fetchAudio(hanji, tailo, btn) {
+      setSlotState(btn, 'pending');
+      try {
+        const res = await fetch('/api/audio', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ hanji, tailo, engine: currentVoiceEngine })
+        });
+        const data = await res.json();
+        if (!res.ok || !data.audio_url) {
+          throw new Error(data.error || t('audioFailed'));
+        }
+        setSlotState(btn, 'ready', data.audio_url);
+      } catch (err) {
+        setSlotState(btn, 'error', err.message);
+      }
+    }
+
+    function makeColumn(labelKey) {
+      const col = document.createElement('div');
+      col.className = 'lookup-col';
+      const label = document.createElement('div');
+      label.className = 'lookup-label';
+      label.textContent = t(labelKey);
+      col.appendChild(label);
+      return col;
+    }
+
+    function makeHead(button, mainEl) {
+      const head = document.createElement('div');
+      head.className = 'lookup-head';
+      head.appendChild(button);
+      head.appendChild(mainEl);
+      return head;
+    }
+
+    // ---- Hover-to-translate tooltip: hovering a word/phrase segment in the
+    // Mandarin or Taiwanese columns shows a mini Mandarin/Taiwanese/English
+    // breakdown for just that segment. ----
+    const hoverTooltip = document.getElementById('hover-tooltip');
+
+    function tooltipRow(labelKey, text, romanization, isTaigi) {
+      if (!text) return '';
+      const label = document.createElement('div');
+      label.className = 'hover-tooltip-label';
+      label.textContent = t(labelKey);
+      const value = document.createElement('div');
+      value.className = 'hover-tooltip-text';
+      value.textContent = text;
+      const frag = document.createDocumentFragment();
+      frag.appendChild(label);
+      frag.appendChild(value);
+      if (romanization) {
+        const rom = document.createElement('div');
+        rom.className = 'hover-tooltip-romanization' + (isTaigi ? ' is-taigi' : '');
+        rom.textContent = romanization;
+        frag.appendChild(rom);
+      }
+      return frag;
+    }
+
+    function showTooltip(target, seg) {
+      hoverTooltip.innerHTML = '';
+      [
+        tooltipRow('colMandarin', seg.mandarin, seg.pinyin, false),
+        tooltipRow('colTaiwanese', seg.hanji, seg.tailo, true),
+        tooltipRow('colEnglish', seg.english),
+      ].forEach((frag) => { if (frag) hoverTooltip.appendChild(frag); });
+      if (!hoverTooltip.childNodes.length) return;
+
+      hoverTooltip.hidden = false;
+      hoverTooltip.style.left = '-9999px';
+      hoverTooltip.style.top = '-9999px';
+      const rect = target.getBoundingClientRect();
+      const tipRect = hoverTooltip.getBoundingClientRect();
+      let left = rect.left + rect.width / 2 - tipRect.width / 2;
+      left = Math.max(8, Math.min(left, window.innerWidth - tipRect.width - 8));
+      let top = rect.top - tipRect.height - 8;
+      if (top < 8) top = rect.bottom + 8;
+      hoverTooltip.style.left = `${left}px`;
+      hoverTooltip.style.top = `${top}px`;
+    }
+
+    function hideTooltip() {
+      hoverTooltip.hidden = true;
+    }
+
+    // Renders `segments` ([{mandarin, hanji, english, specific}]) as hoverable
+    // spans, one per word/phrase. `textKey` picks which language's text to
+    // display for each segment ("mandarin" for the Mandarin column, "hanji"
+    // for the Taiwanese column). When `emphasize` is set, "specific"
+    // segments (Taigi wording not shared with Mandarin) are bolded and
+    // shared ones dimmed - same convention used before, now word-level
+    // instead of character-level.
+    function renderWordSegments(container, segments, textKey, emphasize) {
+      segments.forEach((seg) => {
+        const text = seg[textKey];
+        if (!text) return;
+        const span = document.createElement('span');
+        span.className = 'word-segment' + (emphasize ? (seg.specific ? ' diff-specific' : ' diff-shared') : '');
+        span.textContent = text;
+        span.addEventListener('mouseenter', () => showTooltip(span, seg));
+        span.addEventListener('mouseleave', hideTooltip);
+        container.appendChild(span);
+      });
+    }
+
+    function buildMandarinColumn(segments, pinyinText) {
+      const col = makeColumn('colMandarin');
+      const main = document.createElement('div');
+      main.className = 'lookup-main';
+      if (segments && segments.length) {
+        renderWordSegments(main, segments, 'mandarin', false);
+      } else {
+        main.textContent = '—';
+      }
+      const fullText = (segments || []).map((s) => s.mandarin).join('');
+      const btn = makeAudioButton(() => speak(fullText, 'zh-TW'));
+      col.appendChild(makeHead(btn, main));
+      if (pinyinText) {
+        const secondary = document.createElement('div');
+        secondary.className = 'lookup-secondary';
+        secondary.textContent = pinyinText;
+        col.appendChild(secondary);
+      }
+      return col;
+    }
+
+    function buildTaiwaneseColumn(variation, index) {
+      const col = makeColumn('colTaiwanese');
+      col.querySelector('.lookup-label').append(' ');
+      const badge = document.createElement('span');
+      badge.className = 'lookup-badge';
+      badge.textContent = String(index + 1);
+      col.querySelector('.lookup-label').appendChild(badge);
+
+      const main = document.createElement('div');
+      main.className = 'lookup-main';
+      if (variation.segments && variation.segments.length) {
+        renderWordSegments(main, variation.segments, 'hanji', true);
+      } else {
+        main.textContent = variation.hanji || '—';
+      }
+
+      const audioBtn = makeAudioSlot();
+      col.appendChild(makeHead(audioBtn, main));
+
+      const phonetic = variation.tailo || variation.romanization;
+      if (phonetic) {
+        const secondary = document.createElement('div');
+        secondary.className = 'lookup-secondary is-taigi';
+        secondary.textContent = phonetic;
+        col.appendChild(secondary);
+      }
+      return { col, audioBtn };
+    }
+
+    function buildEnglishColumn(englishText) {
+      const col = makeColumn('colEnglish');
+      const main = document.createElement('div');
+      main.className = 'lookup-main is-latin';
+      main.textContent = englishText || '—';
+      const btn = makeAudioButton(() => speak(englishText, 'en-US'));
+      col.appendChild(makeHead(btn, main));
+      return col;
+    }
+
+    function renderResults(data) {
+      lookupList.innerHTML = '';
+      currentVariations = [];
+      data.variations.forEach((v, i) => {
+        const card = document.createElement('div');
+        card.className = 'lookup-card';
+        card.appendChild(buildMandarinColumn(v.segments, v.pinyin));
+        const { col: taiwaneseCol, audioBtn } = buildTaiwaneseColumn(v, i);
+        card.appendChild(taiwaneseCol);
+        card.appendChild(buildEnglishColumn(data.english));
+        lookupList.appendChild(card);
+
+        currentVariations.push({ hanji: v.hanji, tailo: v.tailo, audioBtn });
+        fetchAudio(v.hanji, v.tailo, audioBtn);
+      });
+    }
+
+    function showError(msg) {
+      errorMessage.textContent = msg;
+      errorState.style.display = 'block';
+      resultsSection.style.display = 'none';
+    }
+
+    function hideError() {
+      errorState.style.display = 'none';
+    }
+
+    searchBtn.addEventListener('click', doSearch);
+    sentenceInput.addEventListener('keydown', (e) => {
+      if (e.key !== 'Enter') return;
+      e.preventDefault();
+      doSearch();
+    });
+  </script>
+</body>
+</html>
